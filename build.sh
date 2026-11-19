@@ -2,8 +2,8 @@
 # Runs inside the container (started by build.ps1). Output: out/fb-client.apk
 set -eu
 
-VERSION_CODE=11
-VERSION_NAME=3.2
+VERSION_CODE=12
+VERSION_NAME=3.3
 # DEBUG=true (build.ps1 -Debug): the WebView can be inspected over adb
 DEBUG=${DEBUG:-false}
 MIN_SDK=33

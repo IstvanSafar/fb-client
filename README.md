@@ -38,7 +38,8 @@ between:
 - Keyword filter. It also matches Facebook's automatic image descriptions ("May be an image
   of dog"), so a keyword like `dog` hides dog pictures too. Use the language your Facebook is
   set to.
-- Autoplay videos: on by default. When off, a video plays only when you tap it.
+- Autoplay videos: off by default, so a video plays only when you tap it. Switch it on in
+  Settings if you want Facebook to play videos as you scroll.
 - Follows the phone's dark/light mode
 
 Filters work by matching labels on the Facebook page (English and Hungarian). When Facebook

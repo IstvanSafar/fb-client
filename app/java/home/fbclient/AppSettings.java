@@ -19,7 +19,7 @@ final class AppSettings {
             {"hideReelsInFeed", "Hide Reels in the feed (the Reels menu item stays)", false},
             {"hidePeopleYouMayKnow", "Hide \"People you may know\"", false},
             {"hideSuggestedGroups", "Hide suggested groups", false},
-            {"autoplayVideos", "Autoplay videos", true},
+            {"autoplayVideos", "Autoplay videos", false},
     };
     static final String KEYWORDS = "keywords";
     static final String VERSION = "version";
