@@ -1,0 +1,6 @@
+build/
+out/
+# Signing key and its password: secret, never commit
+keystore/
+# Local developer notes, not published
+CLAUDE.md
