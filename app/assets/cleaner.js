@@ -153,14 +153,53 @@
     }
   }
 
-  if (window.__fbcLoaded) { clean(); return; } // new settings: re-filter right away
+  // Autoplay. The WebView's own setting (setMediaPlaybackRequiresUserGesture) does not stop
+  // Facebook's muted autoplay, so it is controlled here: with autoplayVideos off, play() is
+  // allowed only right after a tap (transient user activation), and videos that started on
+  // their own are paused.
+  function autoplayOff() { return settings().autoplayVideos === false; }
+  function userJustTapped() { return !!(navigator.userActivation && navigator.userActivation.isActive); }
+
+  if (!HTMLMediaElement.prototype.__fbcPatched) {
+    var originalPlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+      if (autoplayOff()) {
+        if (!userJustTapped()) {
+          return Promise.reject(new DOMException('Autoplay is off in fb-client', 'NotAllowedError'));
+        }
+        this.dataset.fbcUserPlayed = '1';
+      }
+      return originalPlay.apply(this, arguments);
+    };
+    HTMLMediaElement.prototype.__fbcPatched = true;
+  }
+
+  function stopAutoplayingVideos() {
+    if (!autoplayOff()) return;
+    var vids = document.querySelectorAll('video');
+    for (var i = 0; i < vids.length; i++) {
+      var v = vids[i];
+      v.autoplay = false;
+      if (!v.paused && !v.dataset.fbcUserPlayed) v.pause();
+    }
+  }
+
+  if (window.__fbcLoaded) { clean(); stopAutoplayingVideos(); return; } // new settings: apply right away
   window.__fbcLoaded = true;
+
+  // A video started by the autoplay attribute does not call play(), so catch it here
+  document.addEventListener('play', function (e) {
+    var v = e.target;
+    if (autoplayOff() && !v.dataset.fbcUserPlayed && !userJustTapped()) v.pause();
+    else if (userJustTapped()) v.dataset.fbcUserPlayed = '1';
+  }, true);
 
   var pending = false;
   new MutationObserver(function () {
     if (pending) return;
     pending = true;
-    setTimeout(function () { pending = false; clean(); }, 400);
+    setTimeout(function () { pending = false; clean(); stopAutoplayingVideos(); }, 400);
   }).observe(document.documentElement, { childList: true, subtree: true });
   clean();
+  stopAutoplayingVideos();
 })();

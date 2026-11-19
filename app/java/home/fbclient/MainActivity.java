@@ -177,7 +177,9 @@ public class MainActivity extends Activity {
         s.setGeolocationEnabled(false);
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(false);
-        s.setMediaPlaybackRequiresUserGesture(!AppSettings.isOn(this, "autoplayVideos"));
+        // Left at the default. It does not stop Facebook's muted autoplay; the autoplay switch
+        // is enforced in cleaner.js instead.
+        s.setMediaPlaybackRequiresUserGesture(true);
         s.setTextZoom(AppSettings.textZoom(this));
         s.setSupportMultipleWindows(false);
         s.setJavaScriptCanOpenWindowsAutomatically(false);
@@ -354,9 +356,8 @@ public class MainActivity extends Activity {
         int v = AppSettings.prefs(this).getInt(AppSettings.VERSION, 0);
         if (v != settingsVersion) {
             settingsVersion = v;
-            web.getSettings().setMediaPlaybackRequiresUserGesture(!AppSettings.isOn(this, "autoplayVideos"));
             web.getSettings().setTextZoom(AppSettings.textZoom(this));
-            runCleaner(web);
+            runCleaner(web); // also applies the autoplay setting (see cleaner.js)
         }
     }
 
