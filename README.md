@@ -41,6 +41,8 @@ between:
 - Autoplay videos: off by default, so a video plays only when you tap it. Switch it on in
   Settings if you want Facebook to play videos as you scroll.
 - Follows the phone's dark/light mode
+- Settings shows the installed version. "Check for updates" asks GitHub for the latest
+  release, only when you tap it, and opens the download page if there is a newer one.
 
 Filters work by matching labels on the Facebook page (English and Hungarian). When Facebook
 changes its page, some filters may stop working until they are updated in
