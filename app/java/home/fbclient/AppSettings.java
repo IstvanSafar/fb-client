@@ -57,6 +57,7 @@ final class AppSettings {
                 if (w.length() >= 2) words.put(w);
             }
             o.put("keywords", words);
+            o.put("textZoom", textZoom(c)); // cleaner.js fitLargeText()
             return o.toString();
         } catch (JSONException e) {
             return "{}";
