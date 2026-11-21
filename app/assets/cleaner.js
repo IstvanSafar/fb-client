@@ -153,39 +153,6 @@
     }
   }
 
-  // Larger text. Facebook's server lays out the page for 100% text: it breaks the lines
-  // itself (white-space: pre), and gives every box a fixed pixel height. With a bigger
-  // text size (WebSettings.setTextZoom) the text spills out of its box, over the photo below.
-  // For longer texts (post bodies) the line breaks are allowed to wrap again and the fixed
-  // heights above the text grow with it. Short labels (names, buttons, "Photo") are left
-  // alone: changing their boxes breaks the header and the stories row.
-  function fitLargeText() {
-    if (!(settings().textZoom > 100)) return;
-    var texts = document.querySelectorAll('.native-text');
-    for (var i = 0; i < texts.length; i++) {
-      var t = texts[i], s = t.textContent;
-      if (s.length < 25) continue;
-      if (s.length < 60 && s.indexOf('\n') < 0 && t.scrollWidth <= t.clientWidth + 1) continue;
-      if (t.dataset.fbcFit === String(s.length)) continue; // done, and not recycled since
-      t.dataset.fbcFit = String(s.length);
-      t.style.whiteSpace = 'pre-wrap';
-      t.style.overflowWrap = 'anywhere';
-      var spans = t.querySelectorAll('span');
-      for (var j = 0; j < spans.length; j++) spans[j].style.lineHeight = '1.25';
-      // Fixed heights from the text up to the first box that already sizes to its content.
-      // The old height stays as a minimum: Facebook places some boxes with negative margins
-      // (a name next to the profile picture), and with plain 'auto' those boxes would shrink.
-      for (var e = t.parentElement; e && e !== document.body; e = e.parentElement) {
-        var h = e.style.height;
-        if (h === 'auto' || h === 'initial') break;
-        if (h) {
-          e.style.minHeight = h;
-          e.style.height = 'auto';
-        }
-      }
-    }
-  }
-
   // Autoplay. The WebView's own setting (setMediaPlaybackRequiresUserGesture) does not stop
   // Facebook's muted autoplay, so it is controlled here: with autoplayVideos off, play() is
   // allowed only right after a tap (transient user activation), and videos that started on
@@ -217,7 +184,7 @@
     }
   }
 
-  if (window.__fbcLoaded) { clean(); fitLargeText(); stopAutoplayingVideos(); return; } // new settings: apply right away
+  if (window.__fbcLoaded) { clean(); stopAutoplayingVideos(); return; } // new settings: apply right away
   window.__fbcLoaded = true;
 
   // A video started by the autoplay attribute does not call play(), so catch it here
@@ -231,9 +198,9 @@
   new MutationObserver(function () {
     if (pending) return;
     pending = true;
-    setTimeout(function () { pending = false; clean(); fitLargeText(); stopAutoplayingVideos(); }, 400);
+    setTimeout(function () { pending = false; clean(); stopAutoplayingVideos(); }, 400);
   }).observe(document.documentElement, { childList: true, subtree: true });
   clean();
-  fitLargeText();
+ 
   stopAutoplayingVideos();
 })();

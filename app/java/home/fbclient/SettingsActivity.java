@@ -72,7 +72,7 @@ public class SettingsActivity extends Activity {
         slider.setProgress((zoom - AppSettings.ZOOM_MIN) / AppSettings.ZOOM_STEP);
         slider.setMinimumHeight(dp(48));
         Runnable refresh = () -> {
-            zoomLabel.setText("Text size: " + zoom + "%");
+            zoomLabel.setText("Zoom (text and pictures): " + zoom + "%");
             sample.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f * zoom / 100f);
         };
         refresh.run();

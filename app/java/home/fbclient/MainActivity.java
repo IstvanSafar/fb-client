@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.WindowInsets;
+import android.view.WindowMetrics;
 import android.view.WindowInsetsController;
 import android.webkit.CookieManager;
 import android.webkit.GeolocationPermissions;
@@ -67,6 +68,7 @@ public class MainActivity extends Activity {
             MENU_MARKETPLACE = 4, MENU_REFRESH = 5, MENU_SETTINGS = 6;
 
     private WebView web;
+    private ZoomFrame zoomFrame;
     private ValueCallback<Uri[]> fileCallback;
     private String cleanerJs = "";
     private int settingsVersion;
@@ -79,7 +81,10 @@ public class MainActivity extends Activity {
 
         FrameLayout root = new FrameLayout(this);
         web = new WebView(this);
-        root.addView(web, new FrameLayout.LayoutParams(
+        zoomFrame = new ZoomFrame(this);
+        zoomFrame.setZoom(AppSettings.textZoom(this) / 100f);
+        zoomFrame.addView(web);
+        root.addView(zoomFrame, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         root.addView(createMenuButton(), menuButtonLayout());
         setContentView(root);
@@ -89,6 +94,7 @@ public class MainActivity extends Activity {
         cleanerJs = readAsset("cleaner.js");
         configureWebView();
 
+        setWindowSizeCookie();
         if (state == null || web.restoreState(state) == null) {
             web.loadUrl(HOME_URL);
         }
@@ -141,6 +147,28 @@ public class MainActivity extends Activity {
         return false;
     }
 
+    /**
+     * Facebook's server lays out the page for the window size in the "wd" and "vpd" cookies
+     * (CSS pixels, e.g. 412x892), which its own script updates only after the page has loaded. Set it
+     * before loading, from the window size divided by the zoom, so the first page already
+     * fits the zoomed window.
+     */
+    private void setWindowSizeCookie() {
+        WindowMetrics m = getWindowManager().getCurrentWindowMetrics();
+        Insets i = m.getWindowInsets().getInsetsIgnoringVisibility(
+                WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+        float px = getResources().getDisplayMetrics().density * zoomFrame.zoom();
+        int w = Math.round((m.getBounds().width() - i.left - i.right) / px);
+        int h = Math.round((m.getBounds().height() - i.top - i.bottom) / px);
+        // vpd is "v1;<height>x<width>x<pixel ratio>", the server reads it too
+        String dpr = String.valueOf(getResources().getDisplayMetrics().density);
+        CookieManager cm = CookieManager.getInstance();
+        cm.setCookie("https://m.facebook.com",
+                "wd=" + w + "x" + h + "; domain=.facebook.com; path=/; secure");
+        cm.setCookie("https://m.facebook.com",
+                "vpd=v1%3B" + h + "x" + w + "x" + dpr + "; domain=.facebook.com; path=/; secure");
+    }
+
     /** Injects the current settings and the cleaner script into the page. */
     private void runCleaner(WebView v) {
         if (cleanerJs.isEmpty()) return;
@@ -180,7 +208,10 @@ public class MainActivity extends Activity {
         // Left at the default. It does not stop Facebook's muted autoplay; the autoplay switch
         // is enforced in cleaner.js instead.
         s.setMediaPlaybackRequiresUserGesture(true);
-        s.setTextZoom(AppSettings.textZoom(this));
+        s.setTextZoom(100); // the page zoom is done by ZoomFrame, see there why
+        // The scroll bar would show as a strip on the right, made thicker by ZoomFrame
+        web.setVerticalScrollBarEnabled(false);
+        web.setHorizontalScrollBarEnabled(false);
         s.setSupportMultipleWindows(false);
         s.setJavaScriptCanOpenWindowsAutomatically(false);
         // With "; wv" Facebook detects a WebView and pushes the app
@@ -356,8 +387,16 @@ public class MainActivity extends Activity {
         int v = AppSettings.prefs(this).getInt(AppSettings.VERSION, 0);
         if (v != settingsVersion) {
             settingsVersion = v;
-            web.getSettings().setTextZoom(AppSettings.textZoom(this));
-            runCleaner(web); // also applies the autoplay setting (see cleaner.js)
+            float zoom = AppSettings.textZoom(this) / 100f;
+            if (zoomFrame.zoom() != zoom) {
+                // Facebook's server lays out the page for the window size in its "wd" cookie,
+                // so a new zoom needs the cookie and a reload
+                zoomFrame.setZoom(zoom);
+                setWindowSizeCookie();
+                web.reload();
+            } else {
+                runCleaner(web); // also applies the autoplay setting (see cleaner.js)
+            }
         }
     }
 

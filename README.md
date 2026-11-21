@@ -26,7 +26,7 @@ between:
 ## Features
 
 - Menu (bottom right): Feed, Reels, Groups, Marketplace, Refresh, Settings
-- Text size: 50–200%
+- Zoom: 50–200%. The whole page is zoomed, text and pictures together, so nothing overlaps
 - Filters, each can be switched on or off:
   - Sponsored posts (on by default)
   - "Open in app" banners (on by default)
